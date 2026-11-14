@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3D 투어</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="vendor/motion/lenis.css">
+<script src="vendor/motion/gsap.min.js"></script>
+<script src="vendor/motion/lenis.min.js"></script>
+<script type="importmap">
+{ "imports": { "three": "./vendor/three/three.module.js", "three/addons/": "./vendor/three/addons/" } }
+</script>
+<script type="module" src="src/app.js"></script>
+</head>
+<body>
+<div id="stage"></div>
+<header id="head">
+  <h1 id="title"></h1>
+  <p id="sub"></p>
+</header>
+<aside id="side">
+  <div id="rooms"></div>
+  <canvas id="mini" aria-label="평면도 미니맵(누르면 그 자리로 이동)"></canvas>
+</aside>
+<div id="caption"><b></b><span></span></div>
+<nav id="bar">
+  <button id="btn-tour" type="button">투어 시작</button>
+  <button id="btn-view" type="button">위에서 보기</button>
+</nav>
+<p id="hint"><b>투어 시작</b>을 누르면 방마다 안내합니다 · 끌어서 둘러보고, 방향키나 바닥을 눌러 걸어 보세요</p>
+<p id="help">바닥 클릭 이동 · 방향키 걷기 · 끌기 둘러보기 · 휠 확대·축소</p>
+<div id="load"><div><p>불러오는 중</p><span><i></i></span></div></div>
+</body>
+</html>

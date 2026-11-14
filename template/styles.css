@@ -1,0 +1,50 @@
+@font-face { font-family: 'Pretendard'; src: url('fonts/PretendardVariable.woff2') format('woff2'); font-weight: 100 900; font-display: swap; }
+:root { --accent: #FF7E5F; --ink: #22201D; --sub: #6B655C; --line: rgba(34, 32, 29, 0.12); --glass: rgba(255, 255, 255, 0.9); }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #ECE8DE; font-family: 'Pretendard', system-ui, sans-serif; color: var(--ink); }
+#stage { position: fixed; inset: 0; }
+#stage canvas { width: 100%; height: 100%; display: block; touch-action: none; }
+#head { position: fixed; left: 20px; top: 18px; padding: 12px 16px; background: var(--glass); border-radius: 12px; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08); }
+#head h1 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+#head p { margin: 2px 0 0; font-size: 13px; color: var(--sub); }
+#side { position: fixed; right: 18px; top: 18px; width: 220px; display: flex; flex-direction: column; gap: 10px; max-height: calc(100% - 36px); }
+#rooms { background: var(--glass); border-radius: 12px; padding: 6px; overflow: auto; overscroll-behavior: contain; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08); }
+.rooms-inner { display: flex; flex-direction: column; gap: 2px; }
+.room { all: unset; cursor: pointer; display: flex; justify-content: space-between; align-items: baseline; padding: 7px 10px; border-radius: 8px; font-size: 14px; }
+.room em { font-style: normal; font-size: 12px; color: var(--sub); }
+.room:hover { background: rgba(255, 126, 95, 0.1); }
+.room.here { background: var(--accent); color: #fff; }
+.room.here em { color: rgba(255, 255, 255, 0.85); }
+#mini { width: 220px; height: 170px; border-radius: 12px; background: #fff; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08); cursor: pointer; }
+#caption { position: fixed; left: 0; right: 0; top: 22px; text-align: center; pointer-events: none; opacity: 0; }
+#caption b { display: inline-block; font-size: 24px; font-weight: 700; color: #fff; background: rgba(28, 26, 24, 0.62); padding: 8px 18px 6px; border-radius: 12px 12px 0 0; backdrop-filter: blur(6px); }
+#caption span { display: table; margin: 0 auto; font-size: 13px; color: #fff; background: rgba(28, 26, 24, 0.62); padding: 3px 14px 7px; border-radius: 0 0 10px 10px; backdrop-filter: blur(6px); }
+#caption span:empty { display: none; }
+#hint { position: fixed; left: 50%; bottom: 80px; translate: -50% 0; margin: 0; padding: 10px 18px; border-radius: 12px; background: rgba(28, 26, 24, 0.72); color: #fff; font-size: 14px; white-space: nowrap; pointer-events: none; }
+#hint b { color: #FFB39E; }
+#caption { visibility: hidden; } /* GSAP가 나타내고 숨긴다 */
+#bar { position: fixed; left: 50%; bottom: 22px; translate: -50% 0; /* transform은 GSAP가 쓴다 */ display: flex; gap: 8px; }
+#bar button { all: unset; white-space: nowrap; cursor: pointer; padding: 11px 20px; border-radius: 999px; background: var(--glass); font-size: 15px; font-weight: 600; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1); }
+#bar button { transition: transform .18s ease, background-color .18s ease, box-shadow .18s ease; }
+#bar button:hover { background: #fff; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12); }
+#bar button:active { transform: translateY(0) scale(0.97); }
+.room { transition: background-color .2s ease, color .2s ease; }
+#bar #btn-tour { background: var(--accent); color: #fff; }
+#bar #btn-tour:hover { background: #F26B4C; }
+#bar #btn-tour.on { background: var(--ink); }
+#help { position: fixed; left: 20px; bottom: 18px; margin: 0; font-size: 12px; color: var(--sub); background: rgba(255, 255, 255, 0.7); padding: 6px 10px; border-radius: 8px; }
+#load { position: fixed; inset: 0; display: grid; place-items: center; background: #F4F1EA; z-index: 10; }
+#load p { margin: 0 0 10px; font-size: 15px; color: var(--sub); text-align: center; }
+#load span { display: block; width: 240px; height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; }
+#load i { display: block; height: 100%; width: 0; background: var(--accent); transition: width 0.3s; }
+@media (max-width: 760px) {
+  #side { width: 132px; } #rooms { display: none; } #mini { width: 132px; height: 104px; } #help { display: none; }
+  #bar button { padding: 10px 14px; font-size: 14px; white-space: nowrap; }
+  #hint { white-space: normal; width: calc(100% - 32px); text-align: center; bottom: 74px; }
+  #caption b { font-size: 19px; }
+  #head { left: 10px; top: 10px; } #side { right: 10px; top: 10px; }
+}
+/* 전후 비교(make_compare.py): '후'(lead)는 배경을 비우고 캔버스 왼쪽을 --wipe만큼 잘라 아래 '전'을 보이게, '전'(mirror)은 그림만 */
+html.compare-lead, html.compare-lead body { background: transparent; }
+html.compare-lead #stage canvas { clip-path: inset(0 0 0 var(--wipe, 0%)); }
+html.compare-mirror #head, html.compare-mirror #side, html.compare-mirror #bar, html.compare-mirror #hint, html.compare-mirror #help, html.compare-mirror #caption, html.compare-mirror #load { display: none !important; }

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>인테리어 전후 · 3D 투어</title>
+<style>
+@font-face { font-family: 'Pretendard'; src: url('after/fonts/PretendardVariable.woff2') format('woff2'); font-weight: 100 900; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #ECE8DE; font-family: 'Pretendard', system-ui, sans-serif; }
+iframe { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; background: transparent; }
+#before { pointer-events: none; }
+#line { position: fixed; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: #fff; box-shadow: 0 0 10px rgba(0, 0, 0, 0.25); pointer-events: none; }
+#knob { position: fixed; top: 50%; width: 48px; height: 48px; margin: -24px 0 0 -24px; border-radius: 50%; background: #fff; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22); cursor: ew-resize; touch-action: none; display: grid; place-items: center; font-size: 18px; font-weight: 700; color: #22201D; user-select: none; }
+.tag { position: fixed; top: 50%; translate: 0 -50%; padding: 6px 12px; border-radius: 999px; background: rgba(28, 26, 24, 0.62); color: #fff; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; pointer-events: none; backdrop-filter: blur(6px); }
+#tagB { translate: calc(-100% - 36px) -50%; } #tagA { translate: 36px -50%; }
+#seg { position: fixed; left: 20px; bottom: 64px; display: flex; padding: 4px; gap: 2px; border-radius: 999px; background: rgba(255, 255, 255, 0.92); box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1); }
+#seg button { all: unset; cursor: pointer; padding: 8px 16px; border-radius: 999px; font-size: 14px; font-weight: 600; color: #6B655C; }
+#seg button.on { background: #22201D; color: #fff; }
+#wait { position: fixed; inset: 0; display: grid; place-items: center; background: #ECE8DE; color: #6B655C; font-size: 15px; transition: opacity .6s; }
+</style>
+</head>
+<body>
+<iframe id="before" src="before/?compare=mirror" title="인테리어 전"></iframe>
+<iframe id="after" src="after/?compare=lead" title="인테리어 후"></iframe>
+<div id="line"></div><span class="tag" id="tagB">BEFORE</span><span class="tag" id="tagA">AFTER</span>
+<div id="knob" aria-label="전후 나누는 막대(좌우로 끌기)">‹ ›</div>
+<nav id="seg"><button data-w="100">전</button><button data-w="50" class="on">비교</button><button data-w="0">후</button></nav>
+<div id="wait">전·후 두 집을 불러오는 중</div>
+<script>
+// 위 iframe = '후'(조작·그리기), 아래 = '전'(같은 카메라로 따라 그림). wipe = 화면 왼쪽부터 '전'이 보이는 비율(%)
+const $ = s => document.querySelector(s), after = $('#after'), before = $('#before');
+let wipe = 100, anim = null, ready = new Set();
+function setWipe(v) {
+  wipe = Math.max(0, Math.min(100, v));
+  after.contentDocument?.documentElement.style.setProperty('--wipe', wipe + '%');
+  const x = wipe + 'vw'; $('#line').style.left = x; $('#knob').style.left = x; $('#tagB').style.left = x; $('#tagA').style.left = x;
+  for (const [el, show] of [[$('#line'), wipe > 0 && wipe < 100], [$('#knob'), true], [$('#tagB'), wipe > 8], [$('#tagA'), wipe < 92]]) el.style.opacity = show ? 1 : 0;
+  for (const b of document.querySelectorAll('#seg button')) b.classList.toggle('on', +b.dataset.w === Math.round(wipe));
+}
+function sweep(to, ms = 900) {
+  cancelAnimationFrame(anim); const from = wipe, t0 = performance.now();
+  const step = t => { const k = Math.min(1, (t - t0) / ms), e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; setWipe(from + (to - from) * e); if (k < 1) anim = requestAnimationFrame(step); };
+  anim = requestAnimationFrame(step);
+}
+// '후'가 그릴 때마다 부른다: '전'이 보이는 동안만 '전'도 그리고, 화면 전체가 '전'이면 '후'는 그리지 않는다
+window.__compareSync = (L, dt) => {
+  const B = before.contentWindow?.tour;
+  if (B?.mirror && wipe > 0) B.mirror(L, dt);
+  L.compareHidden = wipe >= 100;
+};
+addEventListener('message', e => {
+  if (e.data?.compare !== 'ready') return; ready.add(e.data.side);
+  if (ready.size < 2) return;
+  setWipe(100); $('#wait').style.opacity = 0; setTimeout(() => { $('#wait').style.display = 'none'; }, 700);
+  // 처음: '전'을 잠깐 보여 주고 '후'로 쓸어 넘긴 뒤 가운데에서 멈춘다
+  setTimeout(() => sweep(0, 1800), 1200); setTimeout(() => sweep(50, 900), 3400);
+  after.contentWindow.focus();
+});
+const knob = $('#knob');
+knob.addEventListener('pointerdown', e => { cancelAnimationFrame(anim); knob.setPointerCapture(e.pointerId); knob.onpointermove = ev => setWipe(ev.clientX / innerWidth * 100); });
+knob.addEventListener('pointerup', e => { knob.onpointermove = null; knob.releasePointerCapture(e.pointerId); after.contentWindow.focus(); });
+for (const b of document.querySelectorAll('#seg button')) b.addEventListener('click', () => { sweep(+b.dataset.w); after.contentWindow.focus(); });
+addEventListener('keydown', e => { if (e.key === '[') sweep(100); if (e.key === ']') sweep(0); if (e.key === '\\') sweep(50); });
+after.addEventListener('load', () => setWipe(wipe));
+</script>
+</body>
+</html>
